@@ -8,8 +8,46 @@ const year = new Date().getFullYear();
       <p class="font-display text-lg text-moon-100">The Cat and the Silver Moon</p>
       <p class="mt-1 text-sm text-silver-400">Volumen I: Un mundo nuevo · © {year} Nahum F.G.</p>
     </div>
-    <p class="text-xs text-silver-500">
-      Todos los derechos reservados. Marca y obra del autor.
-    </p>
+    <div class="flex flex-wrap items-center justify-center gap-5 text-xs text-silver-400 sm:justify-end">
+      <div class="flex items-center gap-2">
+        <span>Visitas</span>
+        <span id="visit-count" class="inline-flex min-w-12 justify-center" aria-live="polite"></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span>Vistas del tráiler</span>
+        <span id="video-view-count" class="inline-flex min-w-12 justify-center" aria-live="polite"></span>
+      </div>
+    </div>
   </div>
 </footer>
+
+<script>
+  const addCounter = (append: string, path: string) => {
+    if (!window.goatcounter?.visit_count) return;
+
+    window.goatcounter.visit_count({
+      type: 'html',
+      append,
+      path,
+      no_branding: true,
+      attr: {
+        width: '70',
+        height: '24',
+      },
+    });
+  };
+
+  const loadCounters = () => {
+    addCounter('#visit-count', '/');
+    addCounter('#video-view-count', '/video/promo');
+  };
+
+  const counterScript = document.querySelector<HTMLScriptElement>('script[data-goatcounter]');
+  if (counterScript?.dataset.goatcounter) {
+    if (window.goatcounter?.visit_count) {
+      loadCounters();
+    } else {
+      counterScript.addEventListener('load', loadCounters, { once: true });
+    }
+  }
+</script>

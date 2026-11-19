@@ -27,3 +27,11 @@ Coloca el tráiler optimizado en:
 `public/videos/promo-web.mp4`
 
 Poster: `public/images/poster.jpg`
+
+## Contadores
+
+La página usa GoatCounter para contar visitas y reproducciones del tráiler sin cookies:
+
+- Sitio: `silver-moon.goatcounter.com`
+- Ruta de visitas: `/`
+- Ruta del tráiler: `/video/promo`
