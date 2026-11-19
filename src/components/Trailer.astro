@@ -1,5 +1,5 @@
 ---
-const base = import.meta.env.BASE_URL;
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 ---
 
 <section id="trailer" class="scroll-mt-24 py-16 sm:py-24">

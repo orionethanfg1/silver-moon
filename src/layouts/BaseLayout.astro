@@ -6,7 +6,7 @@ interface Props {
   description?: string;
 }
 
-const base = import.meta.env.BASE_URL;
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 const {
   title = 'The Cat and the Silver Moon — Volumen I: Un mundo nuevo',
   description = 'Una novela de fantasía en desarrollo. Nahum despierta en Triria, un mundo de magia, criaturas extraordinarias y destinos entrelazados. Próximamente. Autor: Nahum F.G.',
