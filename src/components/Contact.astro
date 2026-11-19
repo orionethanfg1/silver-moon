@@ -1,0 +1,33 @@
+---
+const whatsapp = '523335982161';
+const waLink = `https://wa.me/${whatsapp}?text=${encodeURIComponent('Hola, me interesa The Cat and the Silver Moon (próximamente).')}`;
+---
+
+<section id="contacto" class="scroll-mt-24 py-16 sm:py-24">
+  <div class="container-moon">
+    <div class="reveal card-glass relative overflow-hidden px-6 py-12 sm:px-12 sm:py-16">
+      <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent/15 blur-3xl"></div>
+      <div class="relative mx-auto max-w-2xl text-center">
+        <p class="eyebrow">Contacto</p>
+        <h2 class="section-title mt-3">Sé de los primeros en enterarte</h2>
+        <p class="mt-4 text-silver-300">
+          Lectores, editoriales e inversionistas: deja un mensaje y te respondo personalmente.
+          Sin spam, sin newsletter automática por ahora.
+        </p>
+
+        <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+          <a href={waLink} target="_blank" rel="noopener noreferrer" class="btn-primary min-w-[220px]">
+            Escribir por WhatsApp
+          </a>
+          <a href="mailto:orion.ethanfg@gmail.com?subject=The%20Cat%20and%20the%20Silver%20Moon" class="btn-secondary min-w-[220px]">
+            Enviar email
+          </a>
+        </div>
+
+        <p class="mt-6 text-xs text-silver-400">
+          Autor: Nahum F.G. · Proyecto independiente en desarrollo
+        </p>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,42 @@
+---
+const pillars = [
+  {
+    title: 'Magia viva',
+    text: 'Poderes que se descubren, se entrenan y tienen consecuencias. La magia no es decorado: es parte de la trama y del crecimiento de los personajes.',
+  },
+  {
+    title: 'Criaturas y razas',
+    text: 'Hadas, sirenas, amansadoras y más. Civilizaciones con historia propia, no simples aliados de fondo.',
+  },
+  {
+    title: 'Eco celta',
+    text: 'Un aliento de hiraeth: anhelo de tierra, respeto por lo antiguo y una atmósfera que se siente antigua sin ser pastiche.',
+  },
+  {
+    title: 'Vínculos',
+    text: 'Amistad, lealtad y amor puestos a prueba. El corazón de la historia no es solo el poder, sino quién eliges proteger.',
+  },
+];
+---
+
+<section id="mundo" class="scroll-mt-24 border-y border-white/5 bg-night-900/40 py-16 sm:py-24">
+  <div class="container-moon">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="eyebrow">El escenario</p>
+      <h2 class="section-title mt-3">Triria</h2>
+      <p class="mt-4 text-silver-300">
+        Un mundo con voluntad propia: ciudades, alianzas, ruinas y lugares donde la luna parece
+        caminar a tu lado.
+      </p>
+    </div>
+
+    <div class="mt-12 grid gap-5 sm:grid-cols-2">
+      {pillars.map((p, i) => (
+        <article class={`reveal reveal-delay-${(i % 4) + 1} card-glass p-6 sm:p-7 transition hover:border-accent/30 hover:shadow-glow`}>
+          <h3 class="font-display text-xl text-moon-50 sm:text-2xl">{p.title}</h3>
+          <p class="mt-3 text-sm leading-relaxed text-silver-300 sm:text-base">{p.text}</p>
+        </article>
+      ))}
+    </div>
+  </div>
+</section>
