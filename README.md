@@ -24,6 +24,6 @@ Activa **Settings → Pages → Source: GitHub Actions** la primera vez.
 
 Coloca el tráiler optimizado en:
 
-`public/videos/promo.mp4`
+`public/videos/promo-web.mp4`
 
 Poster: `public/images/poster.jpg`
