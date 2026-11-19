@@ -1,0 +1,146 @@
+---
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
+---
+
+<section id="galeria" class="scroll-mt-24 border-y border-white/5 bg-night-900/40 py-16 sm:py-24">
+  <div class="container-moon">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="eyebrow">Universo visual</p>
+      <h2 class="section-title mt-3">Escenas de Triria</h2>
+      <p class="mt-4 text-silver-300">
+        Fragmentos visuales del mundo, sus personajes y sus paisajes.
+      </p>
+    </div>
+
+    <div
+      id="scene-gallery"
+      class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
+      aria-live="polite"
+    ></div>
+
+    <p id="gallery-status" class="mt-8 text-center text-sm text-silver-400">
+      Cargando escenas...
+    </p>
+  </div>
+</section>
+
+<dialog
+  id="scene-lightbox"
+  class="max-h-[92vh] max-w-[92vw] overflow-hidden rounded-2xl border border-white/10 bg-night-950 p-0 text-silver-100 shadow-glow-lg backdrop:bg-night-950/90"
+>
+  <button
+    id="scene-lightbox-close"
+    type="button"
+    class="absolute right-3 top-3 z-10 rounded-full border border-white/10 bg-night-950/80 px-3 py-2 text-sm text-white backdrop-blur-sm"
+    aria-label="Cerrar imagen"
+  >
+    Cerrar
+  </button>
+  <figure class="m-0">
+    <img id="scene-lightbox-image" src="" alt="" class="max-h-[78vh] max-w-[92vw] object-contain" />
+    <figcaption id="scene-lightbox-caption" class="px-5 py-4 text-center font-display text-lg text-moon-50"></figcaption>
+  </figure>
+</dialog>
+
+<script define:vars={{ manifestUrl: `${base}images/scenes/scenes.json`, imageBaseUrl: `${base}images/scenes/` }}>
+  const gallery = document.querySelector('#scene-gallery');
+  const status = document.querySelector('#gallery-status');
+  const lightbox = document.querySelector('#scene-lightbox');
+  const lightboxImage = document.querySelector('#scene-lightbox-image');
+  const lightboxCaption = document.querySelector('#scene-lightbox-caption');
+  const closeButton = document.querySelector('#scene-lightbox-close');
+
+  const openScene = (scene) => {
+    if (!(lightbox instanceof HTMLDialogElement) || !(lightboxImage instanceof HTMLImageElement)) return;
+    lightboxImage.src = scene.src;
+    lightboxImage.alt = scene.alt || scene.title;
+    if (lightboxCaption) lightboxCaption.textContent = scene.title || '';
+    lightbox.showModal();
+  };
+
+  closeButton?.addEventListener('click', () => {
+    if (lightbox instanceof HTMLDialogElement) lightbox.close();
+  });
+
+  lightbox?.addEventListener('click', (event) => {
+    if (event.target === lightbox && lightbox instanceof HTMLDialogElement) lightbox.close();
+  });
+
+  const loadGallery = async () => {
+    if (!(gallery instanceof HTMLElement) || !status) return;
+
+    try {
+      const response = await fetch(manifestUrl, { cache: 'no-store' });
+      if (!response.ok) throw new Error(`No se pudo cargar el manifiesto: ${response.status}`);
+
+      const scenes = await response.json();
+      if (!Array.isArray(scenes) || scenes.length === 0) {
+        status.textContent = 'Aún no hay escenas publicadas.';
+        return;
+      }
+
+      status.hidden = true;
+
+      scenes.forEach((scene, index) => {
+        if (!scene?.file) return;
+
+        const src = `${imageBaseUrl}${encodeURIComponent(scene.file)}`;
+        const article = document.createElement('article');
+        article.className = `reveal reveal-delay-${(index % 4) + 1} card-glass group relative overflow-hidden`;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent';
+        button.setAttribute('aria-label', `Ampliar ${scene.title || 'escena de Triria'}`);
+
+        const image = document.createElement('img');
+        image.src = src;
+        image.alt = scene.alt || scene.title || 'Escena de Triria';
+        image.loading = index < 3 ? 'eager' : 'lazy';
+        image.className = 'aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.02]';
+
+        const caption = document.createElement('div');
+        caption.className = 'border-t border-white/10 p-5';
+
+        const title = document.createElement('h3');
+        title.className = 'font-display text-xl text-moon-50';
+        title.textContent = scene.title || 'Escena de Triria';
+
+        caption.append(title);
+        if (scene.description) {
+          const description = document.createElement('p');
+          description.className = 'mt-2 text-sm leading-relaxed text-silver-300';
+          description.textContent = scene.description;
+          caption.append(description);
+        }
+
+        button.append(image, caption);
+        button.addEventListener('click', () => openScene({ ...scene, src }));
+        article.append(button);
+        gallery.append(article);
+      });
+
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+        );
+        gallery.querySelectorAll('.reveal').forEach((item) => observer.observe(item));
+      } else {
+        gallery.querySelectorAll('.reveal').forEach((item) => item.classList.add('is-visible'));
+      }
+    } catch (error) {
+      console.error(error);
+      status.textContent = 'No se pudo cargar la galería.';
+    }
+  };
+
+  loadGallery();
+</script>

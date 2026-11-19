@@ -28,6 +28,25 @@ Coloca el tráiler optimizado en:
 
 Poster: `public/images/poster.jpg`
 
+## Galería de escenas
+
+La galería carga dinámicamente las escenas declaradas en:
+
+`public/images/scenes/scenes.json`
+
+Coloca cada fotografía dentro de `public/images/scenes/` y añade una entrada:
+
+```json
+[
+  {
+    "file": "triria-atardecer.jpg",
+    "title": "Triria al atardecer",
+    "alt": "Paisaje de Triria al atardecer",
+    "description": "La ciudad bajo la luz de la luna."
+  }
+]
+```
+
 ## Contadores
 
 La página usa GoatCounter para contar visitas y reproducciones del tráiler sin cookies:
