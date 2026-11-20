@@ -5,6 +5,7 @@ const links = [
   { href: '#mundo', label: 'Triria' },
   { href: '#personajes', label: 'Personajes' },
   { href: '#galeria', label: 'Galería' },
+  { href: '#progreso', label: 'Progreso' },
   { href: '#trailer', label: 'Tráiler' },
   { href: '#contacto', label: 'Contacto' },
 ];
@@ -25,7 +26,7 @@ const links = [
       </span>
     </a>
 
-    <nav class="hidden items-center gap-6 lg:flex" aria-label="Principal">
+    <nav class="hidden items-center gap-5 xl:flex" aria-label="Principal">
       {links.map((l) => (
         <a href={l.href} class="text-sm text-silver-300 transition hover:text-accent">
           {l.label}
