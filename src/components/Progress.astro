@@ -1,0 +1,81 @@
+---
+import progress from '../data/progress.json';
+
+const goal = Math.max(1, Number(progress.pagesGoal) || 1);
+const written = Math.max(0, Number(progress.pagesWritten) || 0);
+const chapters = Math.max(0, Number(progress.chapters) || 0);
+const pct = Math.min(100, Math.round((written / goal) * 1000) / 10);
+const remaining = Math.max(0, goal - written);
+
+/** Color de barra según avance hacia la meta */
+function barTone(p: number) {
+  if (p >= 90) return { bar: 'from-emerald-400 to-accent', glow: 'shadow-[0_0_28px_rgba(52,211,153,0.35)]', label: 'text-emerald-300' };
+  if (p >= 70) return { bar: 'from-accent to-sky-300', glow: 'shadow-glow', label: 'text-accent' };
+  if (p >= 40) return { bar: 'from-amber-400 to-accent', glow: 'shadow-[0_0_24px_rgba(251,191,36,0.25)]', label: 'text-amber-300' };
+  return { bar: 'from-rose-400/90 to-amber-400', glow: '', label: 'text-rose-300' };
+}
+
+const tone = barTone(pct);
+---
+
+<section id="progreso" class="scroll-mt-24 py-16 sm:py-24">
+  <div class="container-moon">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="eyebrow">Escritura en curso</p>
+      <h2 class="section-title mt-3">Progreso del manuscrito</h2>
+      <p class="mt-4 text-silver-300">
+        Avance aproximado del Volumen I. Los números se actualizan al editar el archivo de progreso.
+      </p>
+    </div>
+
+    <div class="reveal reveal-delay-1 mx-auto mt-10 max-w-3xl card-glass p-6 sm:p-8">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p class="text-xs uppercase tracking-[0.18em] text-silver-400">Progreso general</p>
+          <p class={`mt-1 font-display text-4xl font-semibold tabular-nums ${tone.label}`}>
+            {pct}%
+          </p>
+        </div>
+        <p class="text-sm text-silver-400">
+          {written.toLocaleString('es-MX')} / {goal.toLocaleString('es-MX')} páginas
+        </p>
+      </div>
+
+      <div
+        class="mt-5 h-3.5 overflow-hidden rounded-full bg-white/10"
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={pct}
+        aria-label={`Progreso del manuscrito: ${pct} por ciento`}
+      >
+        <div
+          class={`h-full rounded-full bg-gradient-to-r ${tone.bar} ${tone.glow} transition-[width] duration-700 ease-out`}
+          style={`width: ${pct}%`}
+        ></div>
+      </div>
+
+      <dl class="mt-8 grid gap-4 sm:grid-cols-3">
+        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center sm:text-left">
+          <dt class="text-xs uppercase tracking-wider text-silver-400">Objetivo</dt>
+          <dd class="mt-1 font-display text-2xl text-moon-50 tabular-nums">{goal.toLocaleString('es-MX')}</dd>
+          <p class="mt-1 text-xs text-silver-500">páginas meta</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center sm:text-left">
+          <dt class="text-xs uppercase tracking-wider text-silver-400">Escritas</dt>
+          <dd class="mt-1 font-display text-2xl text-moon-50 tabular-nums">{written.toLocaleString('es-MX')}</dd>
+          <p class="mt-1 text-xs text-silver-500">≈ {remaining.toLocaleString('es-MX')} por completar</p>
+        </div>
+        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-center sm:text-left">
+          <dt class="text-xs uppercase tracking-wider text-silver-400">Capítulos</dt>
+          <dd class="mt-1 font-display text-2xl text-moon-50 tabular-nums">{chapters}</dd>
+          <p class="mt-1 text-xs text-silver-500">+ prólogo</p>
+        </div>
+      </dl>
+
+      {progress.note && (
+        <p class="mt-6 text-center text-xs text-silver-500">{progress.note}</p>
+      )}
+    </div>
+  </div>
+</section>
