@@ -8,19 +8,67 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
       <p class="eyebrow">Universo visual</p>
       <h2 class="section-title mt-3">Escenas de Triria</h2>
       <p class="mt-4 text-silver-300">
-        Fragmentos visuales del mundo, sus personajes y sus paisajes.
+        Fragmentos visuales del mundo, sus personajes y sus paisajes. Añade fotos al manifiesto y
+        aparecerán aquí en el carrusel.
       </p>
     </div>
 
-    <div
-      id="scene-gallery"
-      class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-      aria-live="polite"
-    ></div>
+    <div class="reveal reveal-delay-1 relative mx-auto mt-10 max-w-4xl">
+      <div
+        id="scene-carousel"
+        class="card-glass relative overflow-hidden rounded-3xl shadow-glow"
+        role="region"
+        aria-roledescription="carrusel"
+        aria-label="Escenas de Triria"
+        tabindex="0"
+      >
+        <div
+          id="scene-track"
+          class="flex touch-pan-y transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] will-change-transform"
+        ></div>
 
-    <p id="gallery-status" class="mt-8 text-center text-sm text-silver-400">
-      Cargando escenas...
-    </p>
+        <div class="pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-night-950/40 to-transparent sm:w-16"></div>
+        <div class="pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-night-950/40 to-transparent sm:w-16"></div>
+
+        <button
+          type="button"
+          id="scene-prev"
+          class="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-night-950/70 text-moon-50 backdrop-blur-md transition hover:border-accent/50 hover:bg-night-950/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-30 sm:left-4"
+          aria-label="Escena anterior"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M12.78 4.22a.75.75 0 0 1 0 1.06L8.06 10l4.72 4.72a.75.75 0 1 1-1.06 1.06l-5.25-5.25a.75.75 0 0 1 0-1.06l5.25-5.25a.75.75 0 0 1 1.06 0z" clip-rule="evenodd" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          id="scene-next"
+          class="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-night-950/70 text-moon-50 backdrop-blur-md transition hover:border-accent/50 hover:bg-night-950/90 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-30 sm:right-4"
+          aria-label="Escena siguiente"
+        >
+          <svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M7.22 4.22a.75.75 0 0 1 1.06 0l5.25 5.25a.75.75 0 0 1 0 1.06l-5.25 5.25a.75.75 0 1 1-1.06-1.06L11.94 10 7.22 5.28a.75.75 0 0 1 0-1.06z" clip-rule="evenodd" />
+          </svg>
+        </button>
+
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-night-950 via-night-950/85 to-transparent px-5 pb-5 pt-16 sm:px-8">
+          <p id="scene-counter" class="text-xs uppercase tracking-[0.18em] text-accent"></p>
+          <h3 id="scene-title" class="mt-1 font-display text-xl text-moon-50 sm:text-2xl"></h3>
+          <p id="scene-description" class="mt-1 max-w-2xl text-sm text-silver-300"></p>
+        </div>
+      </div>
+
+      <div
+        id="scene-dots"
+        class="mt-5 flex flex-wrap items-center justify-center gap-2"
+        role="tablist"
+        aria-label="Indicadores de escena"
+      ></div>
+
+      <p id="gallery-status" class="mt-4 text-center text-sm text-silver-400">
+        Cargando escenas...
+      </p>
+    </div>
   </div>
 </section>
 
@@ -43,18 +91,32 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 </dialog>
 
 <script define:vars={{ manifestUrl: `${base}images/scenes/scenes.json`, imageBaseUrl: `${base}images/scenes/` }}>
-  const gallery = document.querySelector('#scene-gallery');
+  const track = document.querySelector('#scene-track');
+  const carousel = document.querySelector('#scene-carousel');
   const status = document.querySelector('#gallery-status');
+  const dotsRoot = document.querySelector('#scene-dots');
+  const titleEl = document.querySelector('#scene-title');
+  const descEl = document.querySelector('#scene-description');
+  const counterEl = document.querySelector('#scene-counter');
+  const prevBtn = document.querySelector('#scene-prev');
+  const nextBtn = document.querySelector('#scene-next');
   const lightbox = document.querySelector('#scene-lightbox');
   const lightboxImage = document.querySelector('#scene-lightbox-image');
   const lightboxCaption = document.querySelector('#scene-lightbox-caption');
   const closeButton = document.querySelector('#scene-lightbox-close');
 
-  const openScene = (scene) => {
+  let scenes = [];
+  let index = 0;
+  let autoplayId = 0;
+  const AUTOPLAY_MS = 5500;
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const openLightbox = (scene) => {
     if (!(lightbox instanceof HTMLDialogElement) || !(lightboxImage instanceof HTMLImageElement)) return;
     lightboxImage.src = scene.src;
-    lightboxImage.alt = scene.alt || scene.title;
+    lightboxImage.alt = scene.alt || scene.title || 'Escena de Triria';
     if (lightboxCaption) lightboxCaption.textContent = scene.title || '';
+    pauseAutoplay();
     lightbox.showModal();
   };
 
@@ -66,76 +128,187 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
     if (event.target === lightbox && lightbox instanceof HTMLDialogElement) lightbox.close();
   });
 
+  lightbox?.addEventListener('close', () => {
+    resumeAutoplay();
+  });
+
+  const updateChrome = () => {
+    const scene = scenes[index];
+    if (!scene) return;
+
+    if (counterEl) counterEl.textContent = `${index + 1} / ${scenes.length}`;
+    if (titleEl) titleEl.textContent = scene.title || 'Escena de Triria';
+    if (descEl) descEl.textContent = scene.description || '';
+
+    if (track instanceof HTMLElement) {
+      track.style.transform = `translate3d(-${index * 100}%, 0, 0)`;
+    }
+
+    dotsRoot?.querySelectorAll('button').forEach((dot, i) => {
+      const active = i === index;
+      dot.setAttribute('aria-selected', active ? 'true' : 'false');
+      dot.classList.toggle('bg-accent', active);
+      dot.classList.toggle('scale-125', active);
+      dot.classList.toggle('bg-white/25', !active);
+    });
+
+    if (prevBtn instanceof HTMLButtonElement) prevBtn.disabled = scenes.length <= 1;
+    if (nextBtn instanceof HTMLButtonElement) nextBtn.disabled = scenes.length <= 1;
+  };
+
+  const goTo = (nextIndex) => {
+    if (!scenes.length) return;
+    index = ((nextIndex % scenes.length) + scenes.length) % scenes.length;
+    updateChrome();
+  };
+
+  const next = () => goTo(index + 1);
+  const prev = () => goTo(index - 1);
+
+  const pauseAutoplay = () => {
+    if (autoplayId) {
+      window.clearInterval(autoplayId);
+      autoplayId = 0;
+    }
+  };
+
+  const resumeAutoplay = () => {
+    if (reduceMotion || scenes.length <= 1) return;
+    pauseAutoplay();
+    autoplayId = window.setInterval(next, AUTOPLAY_MS);
+  };
+
+  prevBtn?.addEventListener('click', () => {
+    prev();
+    resumeAutoplay();
+  });
+  nextBtn?.addEventListener('click', () => {
+    next();
+    resumeAutoplay();
+  });
+
+  carousel?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowLeft') {
+      event.preventDefault();
+      prev();
+      resumeAutoplay();
+    } else if (event.key === 'ArrowRight') {
+      event.preventDefault();
+      next();
+      resumeAutoplay();
+    }
+  });
+
+  let pointerStartX = 0;
+  let pointerDeltaX = 0;
+  let isPointerDown = false;
+
+  carousel?.addEventListener('pointerdown', (event) => {
+    if (!(event instanceof PointerEvent)) return;
+    isPointerDown = true;
+    pointerStartX = event.clientX;
+    pointerDeltaX = 0;
+    pauseAutoplay();
+    carousel.setPointerCapture?.(event.pointerId);
+  });
+
+  carousel?.addEventListener('pointermove', (event) => {
+    if (!isPointerDown || !(event instanceof PointerEvent)) return;
+    pointerDeltaX = event.clientX - pointerStartX;
+  });
+
+  const endPointer = () => {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    if (Math.abs(pointerDeltaX) > 48) {
+      if (pointerDeltaX < 0) next();
+      else prev();
+    }
+    resumeAutoplay();
+  };
+
+  carousel?.addEventListener('pointerup', endPointer);
+  carousel?.addEventListener('pointercancel', endPointer);
+  carousel?.addEventListener('pointerleave', () => {
+    if (isPointerDown) endPointer();
+  });
+
+  carousel?.addEventListener('mouseenter', pauseAutoplay);
+  carousel?.addEventListener('mouseleave', resumeAutoplay);
+
+  const buildSlides = () => {
+    if (!(track instanceof HTMLElement) || !(dotsRoot instanceof HTMLElement)) return;
+    track.innerHTML = '';
+    dotsRoot.innerHTML = '';
+
+    scenes.forEach((scene, i) => {
+      const slide = document.createElement('div');
+      slide.className = 'relative w-full shrink-0 grow-0 basis-full';
+      slide.setAttribute('role', 'group');
+      slide.setAttribute('aria-roledescription', 'slide');
+      slide.setAttribute('aria-label', `${i + 1} de ${scenes.length}`);
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className =
+        'block w-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-4px] focus-visible:outline-accent';
+      button.setAttribute('aria-label', `Ampliar ${scene.title || 'escena'}`);
+
+      const img = document.createElement('img');
+      img.src = scene.src;
+      img.alt = scene.alt || scene.title || 'Escena de Triria';
+      img.loading = i === 0 ? 'eager' : 'lazy';
+      img.decoding = 'async';
+      img.className = 'aspect-[16/10] w-full object-cover sm:aspect-[16/9]';
+
+      button.append(img);
+      button.addEventListener('click', () => openLightbox(scene));
+      slide.append(button);
+      track.append(slide);
+
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.role = 'tab';
+      dot.className =
+        'h-2.5 w-2.5 rounded-full bg-white/25 transition hover:bg-accent/70 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent';
+      dot.setAttribute('aria-label', `Ir a escena ${i + 1}`);
+      dot.addEventListener('click', () => {
+        goTo(i);
+        resumeAutoplay();
+      });
+      dotsRoot.append(dot);
+    });
+  };
+
   const loadGallery = async () => {
-    if (!(gallery instanceof HTMLElement) || !status) return;
+    if (!status) return;
 
     try {
       const response = await fetch(manifestUrl, { cache: 'no-store' });
       if (!response.ok) throw new Error(`No se pudo cargar el manifiesto: ${response.status}`);
 
-      const scenes = await response.json();
-      if (!Array.isArray(scenes) || scenes.length === 0) {
+      const data = await response.json();
+      if (!Array.isArray(data) || data.length === 0) {
+        status.textContent = 'Aún no hay escenas publicadas.';
+        return;
+      }
+
+      scenes = data
+        .filter((item) => item && typeof item.file === 'string' && item.file.length > 0)
+        .map((item) => ({
+          ...item,
+          src: `${imageBaseUrl}${encodeURIComponent(item.file)}`,
+        }));
+
+      if (!scenes.length) {
         status.textContent = 'Aún no hay escenas publicadas.';
         return;
       }
 
       status.hidden = true;
-
-      scenes.forEach((scene, index) => {
-        if (!scene?.file) return;
-
-        const src = `${imageBaseUrl}${encodeURIComponent(scene.file)}`;
-        const article = document.createElement('article');
-        article.className = `reveal reveal-delay-${(index % 4) + 1} card-glass group relative overflow-hidden`;
-
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'block w-full text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent';
-        button.setAttribute('aria-label', `Ampliar ${scene.title || 'escena de Triria'}`);
-
-        const image = document.createElement('img');
-        image.src = src;
-        image.alt = scene.alt || scene.title || 'Escena de Triria';
-        image.loading = index < 3 ? 'eager' : 'lazy';
-        image.className = 'aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.02]';
-
-        const caption = document.createElement('div');
-        caption.className = 'border-t border-white/10 p-5';
-
-        const title = document.createElement('h3');
-        title.className = 'font-display text-xl text-moon-50';
-        title.textContent = scene.title || 'Escena de Triria';
-
-        caption.append(title);
-        if (scene.description) {
-          const description = document.createElement('p');
-          description.className = 'mt-2 text-sm leading-relaxed text-silver-300';
-          description.textContent = scene.description;
-          caption.append(description);
-        }
-
-        button.append(image, caption);
-        button.addEventListener('click', () => openScene({ ...scene, src }));
-        article.append(button);
-        gallery.append(article);
-      });
-
-      if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver(
-          (entries) => {
-            entries.forEach((entry) => {
-              if (entry.isIntersecting) {
-                entry.target.classList.add('is-visible');
-                observer.unobserve(entry.target);
-              }
-            });
-          },
-          { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-        );
-        gallery.querySelectorAll('.reveal').forEach((item) => observer.observe(item));
-      } else {
-        gallery.querySelectorAll('.reveal').forEach((item) => item.classList.add('is-visible'));
-      }
+      buildSlides();
+      goTo(0);
+      resumeAutoplay();
     } catch (error) {
       console.error(error);
       status.textContent = 'No se pudo cargar la galería.';
