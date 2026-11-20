@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "file": "Vida en Triria.png",
+    "title": "Vida en Triria",
+    "alt": "Escena de personajes reunidos en un entorno fantástico",
+    "description": "Una reunión junto a los paisajes de Triria."
+  },
+  {
+    "file": "Vida en Triria 2.png",
+    "title": "Vida en Triria II",
+    "alt": "Personajes disfrutando la naturaleza junto al castillo de Triria",
+    "description": "Personajes y criaturas conviven entre hadas, castillos y lagos."
+  },
+  {
+    "file": "poster_1.jpg",
+    "title": "Retrato de Triria",
+    "alt": "Retrato de una reina élfica ante un paisaje de castillos",
+    "description": "Primer retrato visual del universo de Triria."
+  }
+]
