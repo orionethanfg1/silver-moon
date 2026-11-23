@@ -15,7 +15,7 @@ const year = new Date().getFullYear();
           id="visit-count"
           class="inline-flex min-h-6 min-w-[3rem] items-center justify-center rounded-md border border-white/10 bg-white/5 px-2 tabular-nums text-moon-100"
           aria-live="polite"
-        >—</span>
+        >…</span>
       </div>
       <div class="flex items-center gap-2">
         <span>Vistas del tráiler</span>
@@ -23,44 +23,60 @@ const year = new Date().getFullYear();
           id="video-view-count"
           class="inline-flex min-h-6 min-w-[3rem] items-center justify-center rounded-md border border-white/10 bg-white/5 px-2 tabular-nums text-moon-100"
           aria-live="polite"
-        >—</span>
+        >…</span>
       </div>
     </div>
   </div>
 </footer>
 
 <script>
-  const tryCounters = () => {
-    const gc = window.goatcounter;
-    if (!gc || !gc.visit_count) return false;
+  const GC = 'https://nahumfg.goatcounter.com';
 
-    const mount = (selector, path) => {
-      const el = document.querySelector(selector);
-      if (!(el instanceof HTMLElement)) return;
-      el.textContent = '';
-      gc.visit_count({
-        type: 'html',
-        append: selector,
-        path,
-        no_branding: true,
-        attr: {
-          style: 'border:0;width:3.5rem;height:1.25rem;overflow:hidden;vertical-align:middle;background:transparent',
-        },
-      });
-    };
-
-    mount('#visit-count', '/');
-    mount('#video-view-count', '/video/promo');
-    return true;
+  const formatCount = (value) => {
+    const n = Number(String(value).replace(/[^\d]/g, ''));
+    if (!Number.isFinite(n)) return '—';
+    return n.toLocaleString('es-MX');
   };
 
-  if (!tryCounters()) {
-    const script = document.querySelector('script[data-goatcounter]');
-    script?.addEventListener('load', () => tryCounters(), { once: true });
-    let attempts = 0;
-    const timer = window.setInterval(() => {
-      attempts += 1;
-      if (tryCounters() || attempts > 15) window.clearInterval(timer);
-    }, 400);
-  }
+  const fetchCount = async (path) => {
+    const url = `${GC}/counter/${encodeURIComponent(path)}.json`;
+    const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
+    if (!res.ok) throw new Error(String(res.status));
+    const data = await res.json();
+    return data.count ?? data.count_unique ?? 0;
+  };
+
+  const setText = (id, value) => {
+    const el = document.querySelector(id);
+    if (el) el.textContent = formatCount(value);
+  };
+
+  const load = async () => {
+    const pageCandidates = ['/silver-moon/', '/silver-moon', '/', location.pathname];
+    const videoCandidates = ['/video/promo', '/silver-moon/video/promo'];
+
+    let pageCount = null;
+    for (const path of pageCandidates) {
+      try {
+        pageCount = await fetchCount(path);
+        if (pageCount !== null && pageCount !== undefined) break;
+      } catch (_) {}
+    }
+
+    let videoCount = null;
+    for (const path of videoCandidates) {
+      try {
+        videoCount = await fetchCount(path);
+        if (videoCount !== null && videoCount !== undefined) break;
+      } catch (_) {}
+    }
+
+    setText('#visit-count', pageCount ?? '—');
+    setText('#video-view-count', videoCount ?? '—');
+  };
+
+  load().catch(() => {
+    setText('#visit-count', '—');
+    setText('#video-view-count', '—');
+  });
 </script>
