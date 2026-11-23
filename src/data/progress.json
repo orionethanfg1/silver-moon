@@ -2,6 +2,24 @@
   "pagesGoal": 500,
   "pagesWritten": 285,
   "chapters": 20,
+  "currentStage": 1,
   "note": "Volumen I · incluye prólogo · estimación ~280 palabras/página",
-  "updatedAt": "2026-11-20"
+  "updatedAt": "2026-11-23",
+  "stages": [
+    {
+      "id": 1,
+      "title": "Escritura",
+      "description": "Redacción del manuscrito, construcción del mundo y arcos de personajes."
+    },
+    {
+      "id": 2,
+      "title": "Revisión y corrección",
+      "description": "Edición de estilo, coherencia del canon y pulido del texto."
+    },
+    {
+      "id": 3,
+      "title": "Financiamiento y publicación",
+      "description": "Búsqueda de editorial o financiamiento y salida al público."
+    }
+  ]
 }
