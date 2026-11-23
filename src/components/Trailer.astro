@@ -35,18 +35,18 @@ const base = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/`;
 </section>
 
 <script>
-  const video = document.querySelector<HTMLVideoElement>('#promo-video');
+  const video = document.querySelector('#promo-video');
   let trailerViewRecorded = false;
 
   video?.addEventListener('play', () => {
     if (trailerViewRecorded) return;
     trailerViewRecorded = true;
 
+    // Path fijo para poder leerlo con /counter/PATH.json en el footer
     window.goatcounter?.count({
-      event: true,
       path: '/video/promo',
       title: 'Vistas del tráiler',
-      no_session: false,
+      event: true,
     });
   });
 </script>
