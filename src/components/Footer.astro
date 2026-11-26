@@ -15,7 +15,7 @@ const year = new Date().getFullYear();
           id="visit-count"
           class="inline-flex min-h-6 min-w-[3rem] items-center justify-center rounded-md border border-white/10 bg-white/5 px-2 tabular-nums text-moon-100"
           aria-live="polite"
-        >…</span>
+        >—</span>
       </div>
       <div class="flex items-center gap-2">
         <span>Vistas del tráiler</span>
@@ -23,7 +23,7 @@ const year = new Date().getFullYear();
           id="video-view-count"
           class="inline-flex min-h-6 min-w-[3rem] items-center justify-center rounded-md border border-white/10 bg-white/5 px-2 tabular-nums text-moon-100"
           aria-live="polite"
-        >…</span>
+        >—</span>
       </div>
     </div>
   </div>
@@ -32,51 +32,98 @@ const year = new Date().getFullYear();
 <script>
   const GC = 'https://nahumfg.goatcounter.com';
 
-  const formatCount = (value) => {
-    const n = Number(String(value).replace(/[^\d]/g, ''));
-    if (!Number.isFinite(n)) return '—';
+  const setText = (id, text) => {
+    const el = document.querySelector(id);
+    if (el instanceof HTMLElement) el.textContent = text;
+  };
+
+  const formatCount = (raw) => {
+    if (raw === null || raw === undefined || raw === '') return null;
+    const digits = String(raw).replace(/[^\d]/g, '');
+    if (!digits) return null;
+    const n = Number(digits);
+    if (!Number.isFinite(n)) return null;
     return n.toLocaleString('es-MX');
   };
 
   const fetchCount = async (path) => {
     const url = `${GC}/counter/${encodeURIComponent(path)}.json`;
     const res = await fetch(url, { mode: 'cors', credentials: 'omit' });
-    if (!res.ok) throw new Error(String(res.status));
+    if (!res.ok) {
+      // 403 = "Allow adding visitor counts on your website" está OFF en GoatCounter
+      throw new Error(`counter ${res.status}`);
+    }
     const data = await res.json();
-    return data.count ?? data.count_unique ?? 0;
+    return formatCount(data.count ?? data.count_unique);
   };
 
-  const setText = (id, value) => {
-    const el = document.querySelector(id);
-    if (el) el.textContent = formatCount(value);
-  };
+  const tryJsonCounters = async () => {
+    const pagePaths = [location.pathname, '/silver-moon/', '/silver-moon', '/'];
+    const videoPaths = ['/video/promo', '/silver-moon/video/promo'];
 
-  const load = async () => {
-    const pageCandidates = ['/silver-moon/', '/silver-moon', '/', location.pathname];
-    const videoCandidates = ['/video/promo', '/silver-moon/video/promo'];
-
-    let pageCount = null;
-    for (const path of pageCandidates) {
+    let page = null;
+    for (const path of pagePaths) {
       try {
-        pageCount = await fetchCount(path);
-        if (pageCount !== null && pageCount !== undefined) break;
+        page = await fetchCount(path);
+        if (page !== null) break;
       } catch (_) {}
     }
 
-    let videoCount = null;
-    for (const path of videoCandidates) {
+    let video = null;
+    for (const path of videoPaths) {
       try {
-        videoCount = await fetchCount(path);
-        if (videoCount !== null && videoCount !== undefined) break;
+        video = await fetchCount(path);
+        if (video !== null) break;
       } catch (_) {}
     }
 
-    setText('#visit-count', pageCount ?? '—');
-    setText('#video-view-count', videoCount ?? '—');
+    if (page !== null) setText('#visit-count', page);
+    if (video !== null) setText('#video-view-count', video);
+    return page !== null || video !== null;
   };
 
-  load().catch(() => {
-    setText('#visit-count', '—');
-    setText('#video-view-count', '—');
-  });
+  /** Widget oficial de GoatCounter (requiere Allow visitor counts = ON) */
+  const tryVisitCountWidget = () => {
+    const gc = window.goatcounter;
+    if (!gc?.visit_count) return false;
+
+    const mount = (selector, path) => {
+      const el = document.querySelector(selector);
+      if (!(el instanceof HTMLElement)) return;
+      el.textContent = '';
+      gc.visit_count({
+        type: 'html',
+        append: selector,
+        path,
+        no_branding: true,
+        attr: {
+          style:
+            'border:0;width:3.25rem;height:1.15rem;overflow:hidden;vertical-align:middle;background:transparent;color:inherit',
+        },
+      });
+    };
+
+    mount('#visit-count', location.pathname || '/silver-moon/');
+    mount('#video-view-count', '/video/promo');
+    return true;
+  };
+
+  const boot = async () => {
+    const ok = await tryJsonCounters();
+    if (ok) return;
+
+    // Si la API pública sigue en 403, intentar el widget nativo
+    if (tryVisitCountWidget()) return;
+
+    const script = document.querySelector('script[data-goatcounter]');
+    script?.addEventListener(
+      'load',
+      () => {
+        tryVisitCountWidget();
+      },
+      { once: true }
+    );
+  };
+
+  boot();
 </script>
